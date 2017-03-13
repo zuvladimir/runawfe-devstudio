@@ -273,6 +273,7 @@ public abstract class Node extends NamedGraphElement implements Describable {
         Node copy = (Node) super.getCopy(parent);
         copy.setMinimizedView(isMinimizedView());
         copy.setInterruptingBoundaryEvent(isInterruptingBoundaryEvent());
+        copy.setAsyncExecution(getAsyncExecution());
         if (this instanceof ITimed) {
             Timer timer = ((ITimed) this).getTimer();
             if (timer != null) {
