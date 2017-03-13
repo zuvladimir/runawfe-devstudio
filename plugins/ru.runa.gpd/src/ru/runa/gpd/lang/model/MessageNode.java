@@ -108,6 +108,7 @@ public abstract class MessageNode extends Node {
     @Override
     public MessageNode getCopy(GraphElement parent) {
         MessageNode copy = (MessageNode) super.getCopy(parent);
+        copy.setTtlDuration(getTtlDuration());
         for (VariableMapping mapping : getVariableMappings()) {
             copy.getVariableMappings().add(mapping.getCopy());
         }
