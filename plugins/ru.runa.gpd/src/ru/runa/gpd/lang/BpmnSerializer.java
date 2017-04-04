@@ -122,8 +122,8 @@ public class BpmnSerializer extends ProcessSerializer {
     private static final String ACTION_HANDLER_REFS = "actionHandlerRefs";
     private static final String EVENT_TYPE = "eventType";
 
-    private Set<ActionImpl> actionSet = Sets.newHashSet();
-    private Map<String, Element> actionMap = Maps.newHashMap();
+    private final Set<ActionImpl> actionSet = Sets.newHashSet();
+    private final Map<String, Element> actionMap = Maps.newHashMap();
 
     @Override
     public boolean isSupported(Document document) {
@@ -418,7 +418,7 @@ public class BpmnSerializer extends ProcessSerializer {
 
     private void writeBaseProperties(Element element, GraphElement graphElement) {
         setAttribute(element, ID, graphElement.getId());
-        if (graphElement instanceof NamedGraphElement && !Strings.isNullOrEmpty(((NamedGraphElement) graphElement).getName())) {
+        if (graphElement instanceof NamedGraphElement) {
             setAttribute(element, NAME, ((NamedGraphElement) graphElement).getName());
         }
         if (graphElement instanceof Describable) {
