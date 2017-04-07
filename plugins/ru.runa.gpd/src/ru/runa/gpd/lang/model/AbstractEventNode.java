@@ -1,4 +1,4 @@
-package ru.runa.gpd.lang.model.bpmn;
+package ru.runa.gpd.lang.model;
 
 import java.util.List;
 
@@ -6,9 +6,6 @@ import org.eclipse.ui.views.properties.ComboBoxPropertyDescriptor;
 import org.eclipse.ui.views.properties.IPropertyDescriptor;
 
 import ru.runa.gpd.Localization;
-import ru.runa.gpd.lang.model.GraphElement;
-import ru.runa.gpd.lang.model.MessageNode;
-import ru.runa.gpd.lang.model.ProcessDefinition;
 
 import com.google.common.collect.Lists;
 
@@ -17,11 +14,15 @@ public class AbstractEventNode extends MessageNode {
     private EventNodeType eventNodeType;
 
     static {
+        EVENT_NODE_TYPE_NAMES = getEventTypeNames();
+    }
+
+    public static String[] getEventTypeNames() {
         List<String> eventNodeTypeNames = Lists.newArrayList();
         for (EventNodeType eventNodeType : EventNodeType.values()) {
             eventNodeTypeNames.add(Localization.getString("event.node.type." + eventNodeType.name().toLowerCase()));
         }
-        EVENT_NODE_TYPE_NAMES = eventNodeTypeNames.toArray(new String[eventNodeTypeNames.size()]);
+        return eventNodeTypeNames.toArray(new String[eventNodeTypeNames.size()]);
     }
 
     @Override
@@ -29,7 +30,7 @@ public class AbstractEventNode extends MessageNode {
         super.setParent(parent);
         if (parent instanceof ProcessDefinition) {
             eventNodeType = EventNodeType.message;
-        } else {
+        } else if (!(parent instanceof TaskState)) {
             eventNodeType = EventNodeType.signal;
         }
     }

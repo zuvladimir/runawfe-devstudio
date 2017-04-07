@@ -14,13 +14,11 @@ import ru.runa.gpd.ProcessCache;
 import ru.runa.gpd.extension.VariableFormatArtifact;
 import ru.runa.gpd.extension.VariableFormatRegistry;
 import ru.runa.gpd.lang.ValidationError;
-import ru.runa.gpd.lang.model.bpmn.IBoundaryEventContainer;
 import ru.runa.gpd.settings.LanguageElementPreferenceNode;
 import ru.runa.gpd.settings.PrefConstants;
 import ru.runa.gpd.util.VariableMapping;
 import ru.runa.gpd.util.VariableUtils;
 import ru.runa.wfe.lang.AsyncCompletionMode;
-
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
@@ -33,6 +31,11 @@ public class Subprocess extends Node implements Synchronizable, IBoundaryEventCo
     private AsyncCompletionMode asyncCompletionMode = AsyncCompletionMode.ON_MAIN_PROCESS_END;
     public static List<String> PLACEHOLDERS = Lists.newArrayList(VariableUtils.CURRENT_PROCESS_ID, VariableUtils.CURRENT_PROCESS_DEFINITION_NAME,
             VariableUtils.CURRENT_NODE_ID, VariableUtils.CURRENT_NODE_NAME);
+
+    @Override
+    public AbstractEventNode getCatchEventNodes() {
+        return getFirstChild(AbstractEventNode.class);
+    }
 
     @Override
     public void validate(List<ValidationError> errors, IFile definitionFile) {

@@ -15,12 +15,15 @@ import ru.runa.gpd.Application;
 import ru.runa.gpd.Localization;
 import ru.runa.gpd.PluginLogger;
 import ru.runa.gpd.PropertyNames;
+import ru.runa.gpd.lang.model.AbstractEventNode;
 import ru.runa.gpd.lang.model.Delegable;
 import ru.runa.gpd.lang.model.Describable;
 import ru.runa.gpd.lang.model.EndState;
 import ru.runa.gpd.lang.model.EndTokenState;
 import ru.runa.gpd.lang.model.EndTokenSubprocessDefinitionBehavior;
+import ru.runa.gpd.lang.model.EventNodeType;
 import ru.runa.gpd.lang.model.GraphElement;
+import ru.runa.gpd.lang.model.IBoundaryEventContainer;
 import ru.runa.gpd.lang.model.ISendMessageNode;
 import ru.runa.gpd.lang.model.ITimed;
 import ru.runa.gpd.lang.model.MultiSubprocess;
@@ -38,12 +41,9 @@ import ru.runa.gpd.lang.model.TaskState;
 import ru.runa.gpd.lang.model.Timer;
 import ru.runa.gpd.lang.model.TimerAction;
 import ru.runa.gpd.lang.model.Transition;
-import ru.runa.gpd.lang.model.bpmn.AbstractEventNode;
 import ru.runa.gpd.lang.model.bpmn.CatchEventNode;
-import ru.runa.gpd.lang.model.bpmn.EventNodeType;
 import ru.runa.gpd.lang.model.bpmn.ExclusiveGateway;
 import ru.runa.gpd.lang.model.bpmn.IBoundaryEvent;
-import ru.runa.gpd.lang.model.bpmn.IBoundaryEventContainer;
 import ru.runa.gpd.lang.model.bpmn.ParallelGateway;
 import ru.runa.gpd.lang.model.bpmn.ScriptTask;
 import ru.runa.gpd.lang.model.bpmn.TextAnnotation;
@@ -378,6 +378,7 @@ public class BpmnSerializer extends ProcessSerializer {
     }
 
     private void writeBoundaryEvents(Element processElement, IBoundaryEventContainer boundaryEventContainer) {
+    	//TODO why List used here? Probable error: you can add multiple event handlers to one action!
         List<CatchEventNode> catchEventNodes = ((GraphElement) boundaryEventContainer).getChildren(CatchEventNode.class);
         for (CatchEventNode eventNode : catchEventNodes) {
             Element boundaryEventElement = processElement.addElement(BOUNDARY_EVENT);

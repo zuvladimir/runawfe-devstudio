@@ -8,11 +8,15 @@ import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.PointList;
 import org.eclipse.draw2d.geometry.Rectangle;
 
+import ru.runa.gpd.editor.GEFConstants;
+import ru.runa.gpd.editor.gef.figure.uml.BoundaryEventAnchor;
 import ru.runa.gpd.editor.gef.figure.uml.TimerAnchor;
-import ru.runa.gpd.lang.model.jpdl.ReceiveMessageNode;
+import ru.runa.gpd.lang.model.EventNodeType;
+import ru.runa.gpd.lang.model.jpdl.CatchEventNode;
 
 public class ReceiveMessageFigure extends MessageNodeFigure {
     private ConnectionAnchor timerConnectionAnchor;
+    private ConnectionAnchor eventConnectionAnchor;
 
     @Override
     public void init() {
@@ -20,12 +24,14 @@ public class ReceiveMessageFigure extends MessageNodeFigure {
         this.connectionAnchor = new ReceiveMessageNodeAnchor(this);
         addEmptySpace(0, 2 * GRID_SIZE);
         timerConnectionAnchor = new TimerAnchor(this);
+        eventConnectionAnchor = new BoundaryEventAnchor(this);
     }
 
     public ConnectionAnchor getTimerConnectionAnchor() {
         return timerConnectionAnchor;
     }
-
+    
+    
     @Override
     public Dimension getDefaultSize() {
         return super.getDefaultSize().getExpanded(GRID_SIZE, GRID_SIZE);
@@ -58,10 +64,12 @@ public class ReceiveMessageFigure extends MessageNodeFigure {
         points.addPoint(0, dim.height - 1);
         points.addPoint(xLeft, halfHeight);
         g.drawPolygon(points);
-        if (((ReceiveMessageNode) model).getTimer() != null) {
+        CatchEventNode catchEventNode = (CatchEventNode) model;
+		if (catchEventNode.getTimer() != null) {
             Utils.paintTimer(g, dim);
         }
-    }
+		paintEventType(catchEventNode.getEventNodeType(), g, dim, true);
+    }	
 
     static class ReceiveMessageNodeAnchor extends StateAnchor {
         public ReceiveMessageNodeAnchor(IFigure owner) {
