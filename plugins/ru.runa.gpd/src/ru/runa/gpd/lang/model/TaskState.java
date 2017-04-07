@@ -1,5 +1,6 @@
 package ru.runa.gpd.lang.model;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -9,6 +10,7 @@ import org.eclipse.core.resources.IFolder;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.views.properties.IPropertyDescriptor;
 import org.eclipse.ui.views.properties.PropertyDescriptor;
+import org.eclipse.ui.views.properties.TextPropertyDescriptor;
 
 import ru.runa.gpd.Activator;
 import ru.runa.gpd.BotCache;
@@ -23,10 +25,14 @@ import ru.runa.gpd.form.FormVariableAccess;
 import ru.runa.gpd.lang.Language;
 import ru.runa.gpd.lang.NodeTypeDefinition;
 import ru.runa.gpd.lang.ValidationError;
-import ru.runa.gpd.lang.model.bpmn.IBoundaryEventContainer;
+import ru.runa.gpd.lang.model.bpmn.CatchEventNode;
+import ru.runa.gpd.lang.model.bpmn.IBoundaryEvent;
 import ru.runa.gpd.lang.model.jpdl.ActionContainer;
+import ru.runa.gpd.property.DelegableClassPropertyDescriptor;
+import ru.runa.gpd.property.DelegableConfPropertyDescriptor;
 import ru.runa.gpd.property.DurationPropertyDescriptor;
 import ru.runa.gpd.property.EscalationActionPropertyDescriptor;
+import ru.runa.gpd.property.TimerActionPropertyDescriptor;
 import ru.runa.gpd.settings.LanguageElementPreferenceNode;
 import ru.runa.gpd.settings.PrefConstants;
 import ru.runa.gpd.util.BotTaskUtils;
@@ -55,6 +61,12 @@ public class TaskState extends FormNode implements ActionContainer, ITimed, Sync
         return getFirstChild(Timer.class);
     }
 
+    @Override
+    public AbstractEventNode getCatchEventNodes() {
+        return getFirstChild(AbstractEventNode.class);
+    }
+
+    
     public boolean isReassignSwimlaneToInitializerValue() {
         return reassignSwimlaneToInitializerValue;
     }
@@ -94,9 +106,13 @@ public class TaskState extends FormNode implements ActionContainer, ITimed, Sync
 
     @Override
     public String getNextTransitionName(NodeTypeDefinition typeDefinition) {
-        if (getProcessDefinition().getLanguage() == Language.JPDL && getTimer() != null
-                && getTransitionByName(PluginConstants.TIMER_TRANSITION_NAME) == null) {
-            return PluginConstants.TIMER_TRANSITION_NAME;
+        if (getProcessDefinition().getLanguage() == Language.JPDL && getTimer() != null) {
+        	if (getTransitionByName(PluginConstants.TIMER_TRANSITION_NAME) == null) {
+        		return PluginConstants.TIMER_TRANSITION_NAME;
+        	}
+        	if (getTransitionByName(PluginConstants.EVENT_TRANSITION_NAME) == null) {
+        		return PluginConstants.EVENT_TRANSITION_NAME;
+        	}
         }
         return super.getNextTransitionName(typeDefinition);
     }
@@ -254,8 +270,20 @@ public class TaskState extends FormNode implements ActionContainer, ITimed, Sync
         if (PROPERTY_BOT_TASK_NAME.equals(id)) {
             return botTaskLink == null ? "" : botTaskLink.getBotTaskName();
         }
+        if (PROPERTY_EVENT_TYPE.equals(id)) {
+        	  return getEventNodeType();
+        }
         return super.getPropertyValue(id);
     }
+
+	private Object getEventNodeType() {
+		AbstractEventNode event = getCatchEventNodes();
+		EventNodeType eventNodeType = event == null ? null : event.getEventNodeType();
+		if (eventNodeType == null) {
+		      return new Integer(-1);
+		  }
+		  return eventNodeType.ordinal();
+	}
 
     @Override
     public void setPropertyValue(Object id, Object value) {
@@ -269,10 +297,22 @@ public class TaskState extends FormNode implements ActionContainer, ITimed, Sync
                 return;
             }
             setTimeOutDelay((Duration) value);
-        } else {
+        } else if (PROPERTY_EVENT_TYPE.equals(id)) { 
+        	setEventNodeType(value);
+        }else {
             super.setPropertyValue(id, value);
         }
     }
+
+	private void setEventNodeType(Object value) {
+		AbstractEventNode event = getCatchEventNodes();
+		if (event != null && value instanceof Integer ) {
+			Integer v = (Integer)value;
+			if (0 <= v && v < EventNodeType.values().length) {
+				event.setEventNodeType(EventNodeType.values()[v]);
+			}
+		}
+	}
 
     @Override
     public TaskState makeCopy(GraphElement parent) {
@@ -400,5 +440,5 @@ public class TaskState extends FormNode implements ActionContainer, ITimed, Sync
                 }
             }
         }
-    }
+    }    
 }

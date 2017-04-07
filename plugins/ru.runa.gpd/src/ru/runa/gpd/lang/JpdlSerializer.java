@@ -14,12 +14,14 @@ import ru.runa.gpd.Localization;
 import ru.runa.gpd.PluginConstants;
 import ru.runa.gpd.PluginLogger;
 import ru.runa.gpd.PropertyNames;
+import ru.runa.gpd.lang.model.AbstractEventNode;
 import ru.runa.gpd.lang.model.Decision;
 import ru.runa.gpd.lang.model.Delegable;
 import ru.runa.gpd.lang.model.Describable;
 import ru.runa.gpd.lang.model.EndState;
 import ru.runa.gpd.lang.model.EndTokenState;
 import ru.runa.gpd.lang.model.EndTokenSubprocessDefinitionBehavior;
+import ru.runa.gpd.lang.model.EventNodeType;
 import ru.runa.gpd.lang.model.GraphElement;
 import ru.runa.gpd.lang.model.ITimed;
 import ru.runa.gpd.lang.model.MultiSubprocess;
@@ -43,10 +45,10 @@ import ru.runa.gpd.lang.model.jpdl.Action;
 import ru.runa.gpd.lang.model.jpdl.ActionEventType;
 import ru.runa.gpd.lang.model.jpdl.ActionImpl;
 import ru.runa.gpd.lang.model.jpdl.ActionNode;
+import ru.runa.gpd.lang.model.jpdl.CatchEventNode;
 import ru.runa.gpd.lang.model.jpdl.Fork;
 import ru.runa.gpd.lang.model.jpdl.Join;
-import ru.runa.gpd.lang.model.jpdl.ReceiveMessageNode;
-import ru.runa.gpd.lang.model.jpdl.SendMessageNode;
+import ru.runa.gpd.lang.model.jpdl.ThrowEventNode;
 import ru.runa.gpd.ui.custom.Dialogs;
 import ru.runa.gpd.util.Duration;
 import ru.runa.gpd.util.MultiinstanceParameters;
@@ -185,10 +187,7 @@ public class JpdlSerializer extends ProcessSerializer {
                 stateElement.addAttribute(TASK_EXECUTORS_VALUE, multiTaskNode.getDiscriminatorValue());
                 stateElement.addAttribute(EXECUTION_CONDITION, multiTaskNode.getDiscriminatorCondition());
                 for (VariableMapping variable : multiTaskNode.getVariableMappings()) {
-                    Element variableElement = stateElement.addElement(VARIABLE);
-                    setAttribute(variableElement, NAME, variable.getName());
-                    setAttribute(variableElement, MAPPED_NAME, variable.getMappedName());
-                    setAttribute(variableElement, ACCESS, variable.getUsage());
+                    writeVariableAttrs(stateElement, variable);
                 }
             }
             if (state.isAsync()) {
@@ -196,6 +195,7 @@ public class JpdlSerializer extends ProcessSerializer {
                 stateElement.addAttribute(ASYNC_COMPLETION_MODE, state.getAsyncCompletionMode().name());
             }
             writeTimer(stateElement, state.getTimer());
+            writeBoundaryEvents(stateElement, state.getCatchEventNodes());
             if (state.isUseEscalation()) {
                 String timerName = TIMER_ESCALATION;
                 Duration escalationDuration = state.getEscalationDelay();
@@ -236,37 +236,30 @@ public class JpdlSerializer extends ProcessSerializer {
                 setAttribute(subProcessElement, EMBEDDED, Boolean.TRUE.toString());
             } else {
                 for (VariableMapping variable : subprocess.getVariableMappings()) {
-                    Element variableElement = processStateElement.addElement(VARIABLE);
-                    setAttribute(variableElement, NAME, variable.getName());
-                    setAttribute(variableElement, MAPPED_NAME, variable.getMappedName());
-                    setAttribute(variableElement, ACCESS, variable.getUsage());
+                    writeVariableAttrs(processStateElement, variable);
                 }
             }
             if (subprocess instanceof MultiSubprocess) {
                 setAttribute(processStateElement, EXECUTION_CONDITION, ((MultiSubprocess) subprocess).getDiscriminatorCondition());
             }
         }
-        List<SendMessageNode> sendMessageNodes = definition.getChildren(SendMessageNode.class);
-        for (SendMessageNode messageNode : sendMessageNodes) {
+        List<ThrowEventNode> sendMessageNodes = definition.getChildren(ThrowEventNode.class);
+        for (ThrowEventNode messageNode : sendMessageNodes) {
             Element messageElement = writeNode(root, messageNode, null);
             messageElement.addAttribute(DUEDATE, messageNode.getTtlDuration().getDuration());
+            messageElement.addAttribute(TYPE, messageNode.getEventNodeType().name());
             for (VariableMapping variable : messageNode.getVariableMappings()) {
-                Element variableElement = messageElement.addElement(VARIABLE);
-                setAttribute(variableElement, NAME, variable.getName());
-                setAttribute(variableElement, MAPPED_NAME, variable.getMappedName());
-                setAttribute(variableElement, ACCESS, variable.getUsage());
+                writeVariableAttrs(messageElement, variable);
             }
         }
-        List<ReceiveMessageNode> receiveMessageNodes = definition.getChildren(ReceiveMessageNode.class);
-        for (ReceiveMessageNode messageNode : receiveMessageNodes) {
-            Element messageElement = writeNode(root, messageNode, null);
-            for (VariableMapping variable : messageNode.getVariableMappings()) {
-                Element variableElement = messageElement.addElement(VARIABLE);
-                setAttribute(variableElement, NAME, variable.getName());
-                setAttribute(variableElement, MAPPED_NAME, variable.getMappedName());
-                setAttribute(variableElement, ACCESS, variable.getUsage());
+        List<CatchEventNode> receiveMessageNodes = definition.getChildren(CatchEventNode.class);
+        for (CatchEventNode catchEventNode : receiveMessageNodes) {
+            Element messageElement = writeNode(root, catchEventNode, null);
+            messageElement.addAttribute(TYPE, catchEventNode.getEventNodeType().name());
+            for (VariableMapping variable : catchEventNode.getVariableMappings()) {
+                writeVariableAttrs(messageElement, variable);
             }
-            writeTimer(messageElement, messageNode.getTimer());
+            writeTimer(messageElement, catchEventNode.getTimer());
         }
         List<EndTokenState> endTokenStates = definition.getChildren(EndTokenState.class);
         for (EndTokenState state : endTokenStates) {
@@ -279,6 +272,13 @@ public class JpdlSerializer extends ProcessSerializer {
         for (EndState state : endStates) {
             writeElement(root, state);
         }
+    }
+
+    private void writeVariableAttrs(Element processStateElement, VariableMapping variable) {
+        Element variableElement = processStateElement.addElement(VARIABLE);
+        setAttribute(variableElement, NAME, variable.getName());
+        setAttribute(variableElement, MAPPED_NAME, variable.getMappedName());
+        setAttribute(variableElement, ACCESS, variable.getUsage());
     }
 
     private Element writeNode(Element parent, Node node, String delegationNodeName) {
@@ -378,6 +378,15 @@ public class JpdlSerializer extends ProcessSerializer {
         Element eventElement = writeElement(parent, actionEventType, EVENT);
         setAttribute(eventElement, TYPE, actionEventType.getType());
         writeDelegation(eventElement, ACTION, action);
+    }
+
+    private void writeBoundaryEvents(Element stateElement, AbstractEventNode catchEventNode) {
+        if (catchEventNode == null) {
+            return;
+        }
+        Element catchEventElement = stateElement.addElement(RECEIVE_MESSAGE);
+        setAttribute(catchEventElement, ID, catchEventNode.getId());
+        setAttribute(catchEventElement, TYPE, catchEventNode.getEventNodeType().name());
     }
 
     private void writeDelegation(Element parent, String elementName, Delegable delegable) {
@@ -585,11 +594,7 @@ public class JpdlSerializer extends ProcessSerializer {
                 List<Element> vars = node.elements();
                 for (Element childNode : vars) {
                     if (VARIABLE.equals(childNode.getName())) {
-                        VariableMapping variable = new VariableMapping();
-                        variable.setName(childNode.attributeValue(NAME));
-                        variable.setMappedName(childNode.attributeValue(MAPPED_NAME));
-                        variable.setUsage(childNode.attributeValue(ACCESS));
-                        mappings.add(variable);
+                        parseVariableAttrs(childNode, mappings);
                     }
                 }
                 multiTaskState.setVariableMappings(mappings);
@@ -630,6 +635,14 @@ public class JpdlSerializer extends ProcessSerializer {
                                 }
                             }
                         }
+                    }
+                }
+                if (RECEIVE_MESSAGE.equals(stateNodeChild.getName())) {
+                    if (state instanceof TaskState) {
+                        CatchEventNode catchEventNode = new CatchEventNode();
+                        catchEventNode.setId(stateNodeChild.attributeValue(ID));
+                        catchEventNode.setEventNodeType(EventNodeType.valueOf(stateNodeChild.attributeValue(TYPE, "message")));
+                        state.addChild(catchEventNode);
                     }
                 }
                 if (TIMER.equals(stateNodeChild.getName())) {
@@ -722,11 +735,7 @@ public class JpdlSerializer extends ProcessSerializer {
                     subprocess.setEmbedded(Boolean.parseBoolean(childNode.attributeValue(EMBEDDED, "false")));
                 }
                 if (VARIABLE.equals(childNode.getName())) {
-                    VariableMapping variable = new VariableMapping();
-                    variable.setName(childNode.attributeValue(NAME));
-                    variable.setMappedName(childNode.attributeValue(MAPPED_NAME));
-                    variable.setUsage(childNode.attributeValue(ACCESS));
-                    variablesList.add(variable);
+                    parseVariableAttrs(childNode, variablesList);
                 }
             }
             subprocess.setVariableMappings(variablesList);
@@ -742,11 +751,7 @@ public class JpdlSerializer extends ProcessSerializer {
                     multiSubprocess.setSubProcessName(childNode.attributeValue(NAME));
                 }
                 if (VARIABLE.equals(childNode.getName())) {
-                    VariableMapping variable = new VariableMapping();
-                    variable.setName(childNode.attributeValue(NAME));
-                    variable.setMappedName(childNode.attributeValue(MAPPED_NAME));
-                    variable.setUsage(childNode.attributeValue(ACCESS));
-                    mappings.add(variable);
+                    parseVariableAttrs(childNode, mappings);
                 }
             }
             multiSubprocess.setVariableMappings(mappings);
@@ -754,34 +759,27 @@ public class JpdlSerializer extends ProcessSerializer {
         }
         List<Element> sendMessageNodes = root.elements(SEND_MESSAGE);
         for (Element node : sendMessageNodes) {
-            SendMessageNode messageNode = create(node, definition);
-            String duration = node.attributeValue(DUEDATE, "1 days");
-            messageNode.setTtlDuration(new Duration(duration));
+            ThrowEventNode messageNode = create(node, definition);
+            messageNode.setTtlDuration(new Duration(node.attributeValue(DUEDATE, "1 days")));
+            messageNode.setEventNodeType(EventNodeType.valueOf(node.attributeValue(TYPE, "message")));
             List<VariableMapping> variablesList = new ArrayList<VariableMapping>();
             List<Element> nodeList = node.elements();
             for (Element childNode : nodeList) {
                 if (VARIABLE.equals(childNode.getName())) {
-                    VariableMapping variable = new VariableMapping();
-                    variable.setName(childNode.attributeValue(NAME));
-                    variable.setMappedName(childNode.attributeValue(MAPPED_NAME));
-                    variable.setUsage(childNode.attributeValue(ACCESS));
-                    variablesList.add(variable);
+                    parseVariableAttrs(childNode, variablesList);
                 }
             }
             messageNode.setVariableMappings(variablesList);
         }
         List<Element> receiveMessageNodes = root.elements(RECEIVE_MESSAGE);
         for (Element node : receiveMessageNodes) {
-            ReceiveMessageNode messageNode = create(node, definition);
+            CatchEventNode messageNode = create(node, definition);
+            messageNode.setEventNodeType(EventNodeType.valueOf(node.attributeValue(TYPE, "message")));
             List<VariableMapping> variablesList = new ArrayList<VariableMapping>();
             List<Element> nodeList = node.elements();
             for (Element childNode : nodeList) {
                 if (VARIABLE.equals(childNode.getName())) {
-                    VariableMapping variable = new VariableMapping();
-                    variable.setName(childNode.attributeValue(NAME));
-                    variable.setMappedName(childNode.attributeValue(MAPPED_NAME));
-                    variable.setUsage(childNode.attributeValue(ACCESS));
-                    variablesList.add(variable);
+                    parseVariableAttrs(childNode, variablesList);
                 }
                 if (TIMER.equals(childNode.getName())) {
                     Timer timer = create(childNode, messageNode, WAIT_STATE);
@@ -822,5 +820,13 @@ public class JpdlSerializer extends ProcessSerializer {
                 throw new RuntimeException("Problem with " + transition.getId() + ": " + transition.getParent() + " -> " + targetNodeId);
             }
         }
+    }
+
+    private void parseVariableAttrs(Element element, List<VariableMapping> variablesList) {
+        VariableMapping variable = new VariableMapping();
+        variable.setName(element.attributeValue(NAME));
+        variable.setMappedName(element.attributeValue(MAPPED_NAME));
+        variable.setUsage(element.attributeValue(ACCESS));
+        variablesList.add(variable);
     }
 }

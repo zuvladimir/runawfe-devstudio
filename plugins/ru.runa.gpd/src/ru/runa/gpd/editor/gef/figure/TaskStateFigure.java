@@ -8,13 +8,16 @@ import org.eclipse.draw2d.geometry.Rectangle;
 
 import ru.runa.gpd.SharedImages;
 import ru.runa.gpd.editor.GEFConstants;
+import ru.runa.gpd.editor.gef.figure.uml.BoundaryEventAnchor;
 import ru.runa.gpd.editor.gef.figure.uml.TimerAnchor;
 import ru.runa.gpd.lang.Language;
 import ru.runa.gpd.lang.NodeRegistry;
+import ru.runa.gpd.lang.model.AbstractEventNode;
 import ru.runa.gpd.lang.model.TaskState;
 
 public class TaskStateFigure extends StateFigure<TaskState> {
     private ConnectionAnchor timerConnectionAnchor;
+    private ConnectionAnchor eventConnectionAnchor;
 
     @Override
     public void init() {
@@ -23,6 +26,7 @@ public class TaskStateFigure extends StateFigure<TaskState> {
         addLabel();
         addActionsContainer();
         timerConnectionAnchor = new TimerAnchor(this);
+        eventConnectionAnchor = new BoundaryEventAnchor(this);
     }
 
     @Override
@@ -35,7 +39,8 @@ public class TaskStateFigure extends StateFigure<TaskState> {
         Dimension border = dim.getExpanded(-1, -1);
         if (model.isMinimizedView()) {
             g.drawRectangle(new Rectangle(new Point(0, 0), border));
-            g.drawImage(NodeRegistry.getNodeTypeDefinition(model.getClass()).getImage(Language.JPDL.getNotation()), (getClientArea().width - ICON_WIDTH) / 2, (getClientArea().height - ICON_HEIGHT) / 2);
+            g.drawImage(NodeRegistry.getNodeTypeDefinition(model.getClass()).getImage(Language.JPDL.getNotation()),
+                    (getClientArea().width - ICON_WIDTH) / 2, (getClientArea().height - ICON_HEIGHT) / 2);
         } else {
             g.drawRoundRectangle(new Rectangle(new Point(0, 0), border), 20, 10);
         }
@@ -46,11 +51,19 @@ public class TaskStateFigure extends StateFigure<TaskState> {
             if (model.getTimer() != null) {
                 Utils.paintTimer(g, dim);
             }
+            AbstractEventNode catchEventNodes = model.getCatchEventNodes();
+            if (catchEventNodes != null) {
+                Utils.paintBoundaryEvent(g, dim, catchEventNodes.getEventNodeType());
+            }
         }
     }
 
     protected Rectangle getFrameArea(Rectangle origin) {
-        return origin;
+        if (model.isMinimizedView()) {
+            return new Rectangle(origin.x + GRID_SIZE / 2, origin.y + GRID_SIZE / 2, origin.width - GRID_SIZE, origin.height - GRID_SIZE);
+        } else {
+            return new Rectangle(origin.x + GRID_SIZE, origin.y, origin.width - 2 * GRID_SIZE, origin.height - GRID_SIZE);
+        }
     }
 
     @Override
@@ -67,6 +80,10 @@ public class TaskStateFigure extends StateFigure<TaskState> {
 
     public ConnectionAnchor getTimerConnectionAnchor() {
         return timerConnectionAnchor;
+    }
+
+    public ConnectionAnchor getEventConnectionAnchor() {
+        return eventConnectionAnchor;
     }
 
     @Override

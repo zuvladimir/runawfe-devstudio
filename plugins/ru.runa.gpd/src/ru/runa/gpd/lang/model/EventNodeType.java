@@ -1,4 +1,4 @@
-package ru.runa.gpd.lang.model.bpmn;
+package ru.runa.gpd.lang.model;
 
 public enum EventNodeType {
     message,
