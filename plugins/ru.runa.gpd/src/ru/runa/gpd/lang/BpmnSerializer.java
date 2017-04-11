@@ -378,7 +378,7 @@ public class BpmnSerializer extends ProcessSerializer {
     }
 
     private void writeBoundaryEvents(Element processElement, IBoundaryEventContainer boundaryEventContainer) {
-    	//TODO why List used here? Probable error: you can add multiple event handlers to one action!
+        // TODO why List used here? Probable error: you can add multiple event handlers to one action!
         List<CatchEventNode> catchEventNodes = ((GraphElement) boundaryEventContainer).getChildren(CatchEventNode.class);
         for (CatchEventNode eventNode : catchEventNodes) {
             Element boundaryEventElement = processElement.addElement(BOUNDARY_EVENT);
@@ -459,6 +459,9 @@ public class BpmnSerializer extends ProcessSerializer {
     }
 
     private void writeActionHandlers(Element element) {
+        if (actionSet.isEmpty()) {
+            return;
+        }
         Element setElement = element.addElement(ACTION_HANDLER_SET);
         for (ActionImpl action : actionSet) {
             writeActionHandler(setElement.addElement(ACTION_HANDLER), action);
