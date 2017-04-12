@@ -6,7 +6,6 @@ import org.eclipse.ui.views.properties.ComboBoxPropertyDescriptor;
 import org.eclipse.ui.views.properties.IPropertyDescriptor;
 
 import ru.runa.gpd.Localization;
-import ru.runa.gpd.util.VariableMapping;
 
 import com.google.common.collect.Lists;
 
@@ -76,8 +75,8 @@ public class AbstractEventNode extends MessageNode {
     }
 
     @Override
-    public AbstractEventNode getCopy(GraphElement parent) {
-        AbstractEventNode copy = (AbstractEventNode) super.getCopy(parent);
+    public MessageNode makeCopy(GraphElement parent) {
+        AbstractEventNode copy = (AbstractEventNode) super.makeCopy(parent);
         copy.eventNodeType = eventNodeType;
         return copy;
     }
