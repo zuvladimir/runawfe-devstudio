@@ -8,9 +8,12 @@ import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.graphiti.datatypes.ILocation;
+import org.eclipse.graphiti.features.IFeatureProvider;
 import org.eclipse.graphiti.mm.pictograms.Connection;
 import org.eclipse.graphiti.services.Graphiti;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.part.FileEditorInput;
 
 import ru.runa.gpd.editor.graphiti.GraphitiProcessEditor;
 import ru.runa.gpd.editor.graphiti.HasTextDecorator;
@@ -119,6 +122,13 @@ public class GpdXmlContentProvider extends AuxContentProvider {
 
     @Override
     public Document save(ProcessDefinition definition) throws Exception {
+        IFeatureProvider bpmnFeatureProvider = null;
+        if (definition.getLanguage() == Language.BPMN) {
+            IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+            GraphitiProcessEditor graphitiProcessEditor = (GraphitiProcessEditor) page.findEditor(new FileEditorInput(definition.getFile()));
+            bpmnFeatureProvider = graphitiProcessEditor.getDiagramEditorPage().getDiagramTypeProvider().getFeatureProvider();
+        }
+
         Document document = XmlUtil.createDocument(PROCESS_DIAGRAM);
         Element root = document.getRootElement();
         addAttribute(root, NAME, definition.getName());
@@ -157,12 +167,10 @@ public class GpdXmlContentProvider extends AuxContentProvider {
                 Node node = (Node) graphElement;
                 for (Transition transition : node.getLeavingTransitions()) {
                     Point relativeLabelLocation = transition.getLabelLocation();
-                    if (relativeLabelLocation != null) {
+                    if (bpmnFeatureProvider != null && relativeLabelLocation != null) {
                         // label location relative to transition midpoint
-                        ILocation midpoint = Graphiti.getPeService().getConnectionMidpoint(
-                                (Connection) ((GraphitiProcessEditor) PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
-                                        .getActiveEditor()).getDiagramEditorPage().getDiagramTypeProvider().getFeatureProvider()
-                                        .getPictogramElementForBusinessObject(transition), 0.5d);
+                        Connection connection = (Connection) bpmnFeatureProvider.getPictogramElementForBusinessObject(transition);
+                        ILocation midpoint = Graphiti.getPeService().getConnectionMidpoint(connection, 0.5d);
                         Point absoluteLabelLocation = new Point(relativeLabelLocation.x + midpoint.getX(), relativeLabelLocation.y + midpoint.getY());
                         if (absoluteLabelLocation.x < xOffset) {
                             xOffset = absoluteLabelLocation.x;
