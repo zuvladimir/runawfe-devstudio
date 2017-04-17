@@ -46,6 +46,7 @@ public abstract class GraphElement extends EventSupport implements IPropertySour
     private final List<GraphElement> children = new ArrayList<GraphElement>();
     private Rectangle constraint;
     private String id;
+    protected NodeRegulationsProperties nodeRegulationsProperties = new NodeRegulationsProperties(this);
 
     public String getId() {
         return id;
@@ -496,4 +497,11 @@ public abstract class GraphElement extends EventSupport implements IPropertySour
         return id;
     }
 
+    public NodeRegulationsProperties getNodeRegulationsProperties() {
+        return nodeRegulationsProperties;
+    }
+
+    public void setNodeRegulationsProperties(NodeRegulationsProperties nodeRegulationsProperties) {
+        this.nodeRegulationsProperties = nodeRegulationsProperties;
+    }
 }

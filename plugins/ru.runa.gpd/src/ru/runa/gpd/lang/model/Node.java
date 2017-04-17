@@ -14,6 +14,7 @@ import ru.runa.gpd.PluginConstants;
 import ru.runa.gpd.lang.NodeTypeDefinition;
 import ru.runa.gpd.lang.ValidationError;
 import ru.runa.gpd.lang.model.bpmn.IBoundaryEvent;
+import ru.runa.gpd.property.NodeInRegulationsPropertyDescriptor;
 import ru.runa.gpd.util.Duration;
 
 import com.google.common.base.Objects;
@@ -64,6 +65,7 @@ public abstract class Node extends NamedGraphElement implements Describable {
             descriptors.add(new ComboBoxPropertyDescriptor(PROPERTY_INTERRUPTING_BOUNDARY_EVENT, Localization.getString("property.interrupting"),
                     YesNoComboBoxTransformer.LABELS));
         }
+        descriptors.add(new NodeInRegulationsPropertyDescriptor(this));
     }
 
     @Override
@@ -88,6 +90,9 @@ public abstract class Node extends NamedGraphElement implements Describable {
         if (PROPERTY_INTERRUPTING_BOUNDARY_EVENT.equals(id)) {
             return YesNoComboBoxTransformer.getPropertyValue(interruptingBoundaryEvent);
         }
+        if (PROPERTY_NODE_IN_REGULATIONS.equals(id)) {
+            return getNodeRegulationsProperties();
+        }
         return super.getPropertyValue(id);
     }
 
@@ -105,6 +110,8 @@ public abstract class Node extends NamedGraphElement implements Describable {
             setAsyncExecution(NodeAsyncExecution.values()[(Integer) value]);
         } else if (PROPERTY_INTERRUPTING_BOUNDARY_EVENT.equals(id)) {
             setInterruptingBoundaryEvent(YesNoComboBoxTransformer.setPropertyValue(value));
+        } else if (PROPERTY_NODE_IN_REGULATIONS.equals(id)) {
+            setNodeRegulationsProperties((NodeRegulationsProperties) value);
         } else {
             super.setPropertyValue(id, value);
         }
