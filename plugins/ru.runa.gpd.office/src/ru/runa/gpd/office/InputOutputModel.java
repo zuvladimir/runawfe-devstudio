@@ -83,18 +83,18 @@ public class InputOutputModel {
             if (Strings.isNullOrEmpty(outputFilename)) {
                 errors.add(ValidationError.createError(graphElement, Messages.getString("model.validation.out.filename.empty")));
             }
-            if (Strings.isNullOrEmpty(outputVariable) != true) {
-                boolean isOutputVariableExistsInDefinition = false;
-                for (Variable variable : processVariables) {
-                    if (isOutputVariableExistsInDefinition != true && variable.getName().equals(outputVariable)) {
-                        isOutputVariableExistsInDefinition = true;
-                    }
-                }
-                if (isOutputVariableExistsInDefinition != true) {
-                    errors.add(ValidationError.createError(graphElement,
-                            Messages.getString("model.validation.out.file.variable.doesnotExists", outputVariable)));
-                }
-            }
+            // if (Strings.isNullOrEmpty(outputVariable) != true) {
+            // boolean isOutputVariableExistsInDefinition = false;
+            // for (Variable variable : processVariables) {
+            // if (isOutputVariableExistsInDefinition != true && variable.getName().equals(outputVariable)) {
+            // isOutputVariableExistsInDefinition = true;
+            // }
+            // }
+            // if (isOutputVariableExistsInDefinition != true) {
+            // errors.add(ValidationError.createError(graphElement,
+            // Messages.getString("model.validation.out.file.variable.doesnotExists", outputVariable)));
+            // }
+            // }
         }
     }
 }
