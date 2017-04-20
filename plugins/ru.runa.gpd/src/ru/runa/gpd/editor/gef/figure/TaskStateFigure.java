@@ -48,7 +48,7 @@ public class TaskStateFigure extends StateFigure<TaskState> {
             if (model.isAsync()) {
                 g.drawImage(SharedImages.getImage("icons/uml/async.png"), dim.width - GRID_SIZE / 2 - 20, dim.height - GRID_SIZE - 20);
             }
-            if (model.getTimer() != null) {
+            if (model.getTimer() != null || model.isUseEscalation()) {
                 Utils.paintTimer(g, dim);
             }
             AbstractEventNode catchEventNodes = model.getCatchEventNodes();
