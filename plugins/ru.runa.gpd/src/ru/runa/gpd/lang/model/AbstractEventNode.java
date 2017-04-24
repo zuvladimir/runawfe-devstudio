@@ -6,7 +6,6 @@ import org.eclipse.ui.views.properties.ComboBoxPropertyDescriptor;
 import org.eclipse.ui.views.properties.IPropertyDescriptor;
 
 import ru.runa.gpd.Localization;
-import ru.runa.gpd.util.VariableMapping;
 
 import com.google.common.collect.Lists;
 
@@ -62,6 +61,9 @@ public class AbstractEventNode extends MessageNode {
             }
             return eventNodeType.ordinal();
         }
+        if (PROPERTY_INTERRUPTING_BOUNDARY_EVENT.equals(id)) {
+            return YesNoComboBoxTransformer.getPropertyValue(isInterruptingBoundaryEvent());
+        }
         return super.getPropertyValue(id);
     }
 
@@ -70,14 +72,16 @@ public class AbstractEventNode extends MessageNode {
         if (PROPERTY_EVENT_TYPE.equals(id)) {
             int index = ((Integer) value).intValue();
             setEventNodeType(EventNodeType.values()[index]);
+        } else if (PROPERTY_INTERRUPTING_BOUNDARY_EVENT.equals(id)) {
+            setInterruptingBoundaryEvent(YesNoComboBoxTransformer.setPropertyValue(value));
         } else {
             super.setPropertyValue(id, value);
         }
     }
 
     @Override
-    public AbstractEventNode getCopy(GraphElement parent) {
-        AbstractEventNode copy = (AbstractEventNode) super.getCopy(parent);
+    public AbstractEventNode makeCopy(GraphElement parent) {
+        AbstractEventNode copy = (AbstractEventNode) super.makeCopy(parent);
         copy.eventNodeType = eventNodeType;
         return copy;
     }

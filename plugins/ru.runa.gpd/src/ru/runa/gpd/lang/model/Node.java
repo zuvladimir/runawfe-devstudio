@@ -282,7 +282,7 @@ public abstract class Node extends NamedGraphElement implements Describable {
         if (this instanceof IBoundaryEventContainer) {
             AbstractEventNode event = ((IBoundaryEventContainer) this).getCatchEventNodes();
             if (event != null) {
-                event.getCopy(copy);
+                event.makeCopy(copy);
             }
         }
         if (this instanceof Synchronizable) {
@@ -304,10 +304,10 @@ public abstract class Node extends NamedGraphElement implements Describable {
         return result;
     }
 
-    private static class YesNoComboBoxTransformer {
-        private static String[] LABELS = new String[] { Localization.getString("yes"), Localization.getString("no") };
+    public static class YesNoComboBoxTransformer {
+        public static String[] LABELS = new String[] { Localization.getString("yes"), Localization.getString("no") };
 
-        private static Object getPropertyValue(boolean value) {
+        public static Object getPropertyValue(boolean value) {
             if (value) {
                 return Integer.valueOf(0);
             } else {
@@ -315,7 +315,7 @@ public abstract class Node extends NamedGraphElement implements Describable {
             }
         }
 
-        private static boolean setPropertyValue(Object value) {
+        public static boolean setPropertyValue(Object value) {
             if (Integer.valueOf(0).equals(value)) {
                 return true;
             } else {
