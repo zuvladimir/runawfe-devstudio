@@ -17,6 +17,7 @@ import org.eclipse.graphiti.services.Graphiti;
 
 import ru.runa.gpd.editor.graphiti.HasTextDecorator;
 import ru.runa.gpd.editor.graphiti.TextDecoratorEmulation;
+import ru.runa.gpd.lang.model.Action;
 import ru.runa.gpd.lang.model.GraphElement;
 import ru.runa.gpd.lang.model.IBoundaryEventContainer;
 import ru.runa.gpd.lang.model.ITimed;
@@ -28,7 +29,6 @@ import ru.runa.gpd.lang.model.Timer;
 import ru.runa.gpd.lang.model.Transition;
 import ru.runa.gpd.lang.model.bpmn.CatchEventNode;
 import ru.runa.gpd.lang.model.bpmn.TextDecorationNode;
-import ru.runa.gpd.lang.model.jpdl.Action;
 
 import com.google.common.collect.Lists;
 
