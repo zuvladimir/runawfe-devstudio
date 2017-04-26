@@ -9,8 +9,13 @@ public class NodeRegulationsProperties {
 
     public NodeRegulationsProperties(GraphElement parent) {
         this.parent = parent;
-        if (parent.getTypeDefinition() != null) {
-            setEnabled(parent.getTypeDefinition().isEnabledInRegulationsByDefault());
+        try {
+            if (parent.getTypeDefinition() != null) {
+                setEnabled(parent.getTypeDefinition().isEnabledInRegulationsByDefault());
+            }
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
     }
 
