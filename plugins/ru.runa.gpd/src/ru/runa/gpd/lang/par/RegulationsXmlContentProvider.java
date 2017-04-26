@@ -32,6 +32,9 @@ public class RegulationsXmlContentProvider extends AuxContentProvider {
         for (Element nodeSetting : listOfNodeSettings) {
             String id = nodeSetting.elementText(NODE_ID);
             GraphElement graphElement = definition.getGraphElementById(id);
+            if (graphElement == null) {
+                continue;
+            }
             String previousNodeId = nodeSetting.elementText(PREVIOUS_NODE_ID);
             String nextNodeId = nodeSetting.elementText(NEXT_NODE_ID);
             GraphElement previousNode = null;
