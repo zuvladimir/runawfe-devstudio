@@ -156,6 +156,10 @@ public class NodeTypeDefinition {
 
     public <T extends GraphElement> T createElement(GraphElement parent, boolean setName) {
         GraphElement element = createExecutableExtension("model");
+        Language lang = parent.getProcessDefinition().getLanguage();
+        if (lang == Language.BPMN) {
+            element.setParent(parent);
+        }
         if (setName) {
             String name;
             if (element instanceof Swimlane) {
@@ -183,7 +187,9 @@ public class NodeTypeDefinition {
                 }
             }
         }
-        element.setParent(parent);
+        if (lang == Language.JPDL) {
+            element.setParent(parent);
+        }
         return (T) element;
     }
 
