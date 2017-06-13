@@ -29,9 +29,9 @@ import ru.runa.gpd.extension.handler.ParamDefConfig;
 import ru.runa.gpd.form.FormVariableAccess;
 import ru.runa.gpd.lang.model.BotTask;
 import ru.runa.gpd.lang.model.BotTaskType;
+import ru.runa.gpd.lang.model.Delegable;
 import ru.runa.gpd.lang.model.FormNode;
 import ru.runa.gpd.lang.model.GraphElement;
-import ru.runa.gpd.lang.model.Delegable;
 import ru.runa.gpd.lang.model.ITimed;
 import ru.runa.gpd.lang.model.MessageNode;
 import ru.runa.gpd.lang.model.MultiTaskState;
@@ -64,7 +64,7 @@ public class VariableSearchVisitor {
     private final MultiStatus status;
     private final Matcher matcher;
     private final Matcher matcherWithBrackets;
-    private Matcher matcherScriptingName;
+    private final Matcher matcherScriptingName;
 
     public VariableSearchVisitor(VariableSearchQuery query) {
         this.query = query;
@@ -181,7 +181,7 @@ public class VariableSearchVisitor {
         for (Match match : matches) {
             query.getSearchResult().addMatch(match);
         }
-        if (delegable.getDelegationClassName().equals("ru.runa.wfe.extension.handler.SendEmailActionHandler")
+        if ("ru.runa.wfe.extension.handler.SendEmailActionHandler".equals(delegable.getDelegationClassName())
                 && !query.getVariable().getName().equals(query.getVariable().getScriptingName())) {
             matches = findInString(elementMatch, "(" + conf + ")", matcherScriptingName);
             for (Match match : matches) {
