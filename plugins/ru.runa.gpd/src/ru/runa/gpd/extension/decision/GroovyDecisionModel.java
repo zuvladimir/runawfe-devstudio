@@ -46,7 +46,7 @@ public class GroovyDecisionModel {
                     start = 1;
                     operator = "!=";
                 }
-                lexem1Text = ifContent.substring(start, ifContent.indexOf("."));
+                lexem1Text = ifContent.substring(start, ifContent.lastIndexOf("."));
                 lexem2Text = ifContent.substring(ifContent.indexOf("(") + 1, ifContent.length() - 1);
             } else if (strings.length > 3 && ifContent.contains(" || ") && ifContent.contains("ru.runa.wfe.commons.CalendarUtil.dateToCalendar")
                     && ifContent.endsWith(" 0")) {
@@ -83,10 +83,6 @@ public class GroovyDecisionModel {
                 startReturnSearch = returnMatcher.end(1);
             } else {
                 throw new RuntimeException("unparsed");
-            }
-            if (lexem1Text.indexOf(".") > 0 && !isOperationDateType) {
-                // Java names doesn't allowed use of point in variable name
-                lexem1Text = lexem1Text.substring(0, lexem1Text.lastIndexOf("."));
             }
             Variable variable1 = VariableUtils.getVariableByScriptingName(variables, lexem1Text);
             if (variable1 == null) {
