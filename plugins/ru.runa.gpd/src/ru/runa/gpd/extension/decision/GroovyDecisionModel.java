@@ -31,7 +31,6 @@ public class GroovyDecisionModel {
             String lexem1Text = "";
             String operator;
             String lexem2Text = "";
-            boolean isOperationDateType = false;
             if (strings.length == 1 || ifContent.indexOf("\"") > 0) {
                 // i.e. var1.equals(var2) or var1.contains(var2)
                 int start;
@@ -46,12 +45,12 @@ public class GroovyDecisionModel {
                     start = 1;
                     operator = "!=";
                 }
-                lexem1Text = ifContent.substring(start, ifContent.lastIndexOf("."));
+                String lexem1SearchString = ifContent.substring(0, ifContent.indexOf("("));
+                lexem1Text = lexem1SearchString.substring(start, lexem1SearchString.lastIndexOf("."));
                 lexem2Text = ifContent.substring(ifContent.indexOf("(") + 1, ifContent.length() - 1);
             } else if (strings.length > 3 && ifContent.contains(" || ") && ifContent.contains("ru.runa.wfe.commons.CalendarUtil.dateToCalendar")
                     && ifContent.endsWith(" 0")) {
                 // GroovyTypeSupport.DateType
-                isOperationDateType = true;
                 String ifContentWithoutNullCheck = ifContent.substring(ifContent.lastIndexOf(" || ") + " || ".length());
                 String[] stringsWithoutNullCheck = ifContentWithoutNullCheck.split(" ");
                 String[] parts = stringsWithoutNullCheck[0].split("\\.compareTo\\(");
@@ -60,7 +59,6 @@ public class GroovyDecisionModel {
                 operator = stringsWithoutNullCheck[1];
             } else if (strings.length > 3 && ifContent.contains(" || ") && ifContent.contains("BigDecimal") && ifContent.endsWith(" 0")) {
                 // GroovyTypeSupport.BigDecimalType
-                isOperationDateType = false;
                 String ifContentWithoutNullCheck = ifContent.substring(ifContent.lastIndexOf(" || ") + " || ".length());
                 String[] stringsWithoutNullCheck = ifContentWithoutNullCheck.split(" ");
                 lexem1Text = stringsWithoutNullCheck[2];
@@ -95,14 +93,6 @@ public class GroovyDecisionModel {
                 throw new RuntimeException("Operation not found for operator: " + operator);
             }
             Object lexem2;
-            if (lexem2Text.indexOf(".") > 0 && !isOperationDateType) {
-                try {
-                    Double.parseDouble(lexem2Text);
-                } catch (NumberFormatException e) {
-                    // Java names doesn't allowed use of point in variable name
-                    lexem2Text = lexem2Text.substring(0, lexem2Text.lastIndexOf("."));
-                }
-            }
             Variable variable2 = VariableUtils.getVariableByScriptingName(variables, lexem2Text);
             if (variable2 != null) {
                 lexem2 = variable2;
