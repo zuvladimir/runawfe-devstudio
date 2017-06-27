@@ -45,7 +45,7 @@ public class GroovyDecisionModel {
                     start = 1;
                     operator = "!=";
                 }
-                String lexem1SearchString = ifContent.substring(0, ifContent.indexOf("("));
+                String lexem1SearchString = ifContent.contains("(") ? ifContent.substring(0, ifContent.indexOf("(")) : ifContent;
                 lexem1Text = lexem1SearchString.substring(start, lexem1SearchString.lastIndexOf("."));
                 lexem2Text = ifContent.substring(ifContent.indexOf("(") + 1, ifContent.length() - 1);
             } else if (strings.length > 3 && ifContent.contains(" || ") && ifContent.contains("ru.runa.wfe.commons.CalendarUtil.dateToCalendar")
